@@ -2,4 +2,6 @@ Offset	Length	Description
 ---------------------------
 0		4		Magic 'shdw' (73 68 64 77)
 4		4		Version? (big-endian) (00 00 00 01)
-[TBD]
+8		24		?
+32		16		UUID
+48		8		Sector count (are sectors always 512 bytes?)
