@@ -1,7 +1,10 @@
 Offset	Length	Description
 ---------------------------
 0		4		Magic 'shdw' (73 68 64 77)
-4		4		Version? (big-endian) (00 00 00 01)
-8		24		?
+4		4		Version (ex.: 00 00 00 01)
+8		4		Header size, offset to start of table (ex.: 00 00 02 00)
+12		24		?
 32		16		UUID
 48		8		Sector count (are sectors always 512 bytes?)
+
+Integers stored in big-endian.

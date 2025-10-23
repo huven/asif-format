@@ -12,3 +12,12 @@ This repository collects reverse-engineered technical details and community-cont
 $ diskutil image create blank --format ASIF --size 123g -fs None test.asif
 $ diskutil image info test.asif 
 ```
+
+## Testing write
+
+```
+diskutil image attach --noMount  test.asif
+echo -n 1 | dd of=/dev/disk27 bs=1 count=1
+hdiutil eject /dev/disk27
+```
+
