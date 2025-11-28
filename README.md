@@ -10,7 +10,7 @@ ASIF is a two‑level indirect block scheme.
 
 ## Header
 
-Integers stored in big-endian.
+Integers are stored in big‑endian order.
 
 | Offset (hex) | Length (bytes) | Description                         |
 |--------------|----------------|-------------------------------------|
@@ -18,44 +18,49 @@ Integers stored in big-endian.
 | 0x04         | 4              | Version (ex.: 00 00 00 01)          |
 | 0x08         | 4              | Header size (ex.: 00 00 02 00)      |
 | 0x0C         | 4              | Flags                               |
-| 0x10         | 8              | Offset to Directory                 |
-| 0x18         | 8              | Offset to Directory                 |
+| 0x10         | 8              | Offset to Directory (bytes)         |
+| 0x18         | 8              | Offset to Directory (bytes)         |
 | 0x20         | 16             | UUID                                |
 | 0x30         | 8              | Sector count                        |
-| 0x38         | 8              | Max Sector Count                    |
-| 0x40         | 4              | Chunk size in bytes                 |
-| 0x44         | 2              | Sector size  (block size)           |
+| 0x38         | 8              | Maximum sector count                |
+| 0x40         | 4              | Chunk size (bytes)                  |
+| 0x44         | 2              | Sector/block size (bytes)           |
 | 0x46         | 2              | ??                                  |
-| 0x48         | 8              | Metadata offset? (unit chunksize?)  |
+| 0x48         | 8              | Metadata offset? (which unit?)      |
 
 ### Definitions
 
-N = Count of data chunks per chunk group = 4 * sector size  
-S = Chunk group size (in bytes) = 8 * (N + 1)  
-C = Count of chunk groups per table = floor(chunk size / S)  
-D = Data bytes addressed per table = C * N * chunk size  
-T = Count of tables = ceil(max sector count * sector size / D)
+Let N be the number of data chunks per chunk‑group.  
+Let S be the size of a chunk‑group in bytes.  
+Let C be the number of chunk‑groups that fit into a single table.  
+Let D be the total amount of data addressed by one table.  
+Let T be the maximum number of tables required for the image.
+
+```
+N = 4 * sector size  
+S = 8 * (N + 1)  
+C = floor(chunk size / S)  
+D = C * N * chunk size  
+T = ceil(max sector count * sector size / D)
+```
 
 ## Directory
 
-The Directory with highest sequence number is active.
+The header references two directories. The directory with the highest sequence number is considered the active one.
 
-To read from the image, divide the offset by D and use the result
-as index in the directory to obtain the chunk number containing
-the table.
+To locate a table for a given logical offset, divide the offset by D (the data range covered by a single table). The integer quotient yields the index into the directory; the corresponding entry provides the chunk number that holds the desired table.
 
-| Offset (hex) | Length (bytes) | Description                         |
-|--------------|----------------|-------------------------------------|
-| 0x00         | 8              | Sequence number                     |
-| 0x08         | 8              | Chunk number containing Table 0     |
-| 0x16         | 8              | Chunk number containing Table 1     |
+| Offset (hex) | Length (bytes) | Description                          |
+|--------------|----------------|--------------------------------------|
+| 0x00         | 8              | Sequence number                      |
+| 0x08         | 8              | Chunk number that contains Table 0   |
+| 0x16         | 8              | Chunk number that contains Table 1   |
 ...
-| 8 * T        | 8              | Chunk number containing Table T-1   |
+| 8 * T        | 8              | Chunk number that contains Table T-1 |
 
 ## Table
 
-A Table consists of chunk groups. To determine the chunk group, divide relative
-offset by N * chunk size.
+Each table is composed of C chunk‑groups placed sequentially. To determine the chunk-group, divide the relative offset by N * chunk size (the data range covered by a single chunk-group).
 
 | Offset (hex)   | Length (bytes) | Description                         |
 |----------------|----------------|-------------------------------------|
@@ -64,13 +69,11 @@ offset by N * chunk size.
 ...
 | S * (C - 1)    | S              | Chunk group C-1                     |
 
-## Chunk group
+## Chunk Group
 
-A chunk group consists of
-- N data chunk numbers
-- 1 bitmap chunk number
+A chunk-group stores N data-chunk references followed by a single bitmap-chunk reference. The most-significant nine bits of each chunk number are reserved for flag bits. The remaining 55 bits represent the physical chunk index.
 
-To determine the data chunk number, divide relative offset by chunk size.
+To determine the data chunk number, divide the relative offset by chunk size.
 
 | Offset (hex) | Length (bytes) | Description                         |
 |--------------|----------------|-------------------------------------|
@@ -80,24 +83,24 @@ To determine the data chunk number, divide relative offset by chunk size.
 | 8 * (N - 1)  | 8              | Data chunk N-1                      |
 | 8 * N        | 8              | Bitmap chunk                        |
 
-First 9 MSB of chunk number are flags. Todo: describe.
+TODO: describe flags.
 
-## Bitmap chunk
-
-TODO
-
-## Metadata chunk
+## Bitmap Chunk
 
 TODO
 
-## Creating test images
+## Metadata Chunk
+
+TODO
+
+## Creating Test Images
 
 ```
 $ diskutil image create blank --format ASIF --size 123g -fs None test.asif
 $ diskutil image info test.asif 
 ```
 
-## Testing write
+## Testing Write
 
 ```
 diskutil image attach --noMount  test.asif
