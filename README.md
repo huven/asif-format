@@ -6,6 +6,8 @@ As usual, there are no technical details provided about the layout of the ASIF f
 
 This repository collects reverse-engineered technical details and community-contributed findings about the Apple Sparse Image Format ASIF, for the benefit of forensics engineers, virtualization tool authors, archivists, and researchers.
 
+ASIF is a two‑level indirect block scheme.
+
 ## Header
 
 Integers stored in big-endian.
@@ -26,17 +28,21 @@ Integers stored in big-endian.
 | 0x46         | 2              | ??                                  |
 | 0x48         | 8              | Metadata offset? (unit chunksize?)  |
 
+### Definitions
+
+N = Count of data chunks per chunk group = 4 * sector size  
+S = Chunk group size (in bytes) = 8 * (N + 1)  
+C = Count of chunk groups per table = floor(chunk size / S)  
+D = Data bytes addressed per table = C * N * chunk size  
+T = Count of tables = ceil(max sector count * sector size / D)
+
 ## Directory
 
-Directory with highest sequence number is active.
+The Directory with highest sequence number is active.
 
-Let N = Count of data chunks per chunk group = 4 * sector size  
-Let S = Chunk group size (in bytes) = 8 * (N + 1)  
-Let C = Count of chunk groups per table = floor(chunk size / S)  
-Let D = Data bytes addressed by a table = C * N * chunk size  
-Let T = Count of tables = ceil(max sector count * sector size / D)
-
-To determine table, divide offset by D and lookup in directory.
+To read from the image, divide the offset by D and use the result
+as index in the directory to obtain the chunk number containing
+the table.
 
 | Offset (hex) | Length (bytes) | Description                         |
 |--------------|----------------|-------------------------------------|
@@ -63,6 +69,8 @@ offset by N * chunk size.
 A chunk group consists of
 - N data chunk numbers
 - 1 bitmap chunk number
+
+To determine the data chunk number, divide relative offset by chunk size.
 
 | Offset (hex) | Length (bytes) | Description                         |
 |--------------|----------------|-------------------------------------|
