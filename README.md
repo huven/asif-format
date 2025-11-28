@@ -30,30 +30,48 @@ Integers stored in big-endian.
 
 Directory with highest sequence number is active.
 
-Table has fixed size. Todo: describe calculation. To determine table,
-divide offset by table size and lookup in directory.
+Let N = Count of data chunks per chunk group = 4 * sector size  
+Let S = Chunk group size (in bytes) = 8 * (N + 1)  
+Let C = Count of chunk groups per table = floor(chunk size / S)  
+Let D = Data bytes addressed by a table = C * N * chunk size  
+Let T = Count of tables = ceil(max sector count * sector size / D)
+
+To determine table, divide offset by D and lookup in directory.
 
 | Offset (hex) | Length (bytes) | Description                         |
 |--------------|----------------|-------------------------------------|
 | 0x00         | 8              | Sequence number                     |
-| 0x08         | 8              | Chunk number containing Table       |
+| 0x08         | 8              | Chunk number containing Table 0     |
+| 0x16         | 8              | Chunk number containing Table 1     |
 ...
+| 8 * T        | 8              | Chunk number containing Table T-1   |
 
 ## Table
 
-Table consists of groups of (4 * sector_size) x data chunk ref + 1 x bitmap ref.
+A Table consists of chunk groups.
 
-First 9 MSB of chunk number are flags. Todo: describe.
+| Offset (hex)   | Length (bytes) | Description                         |
+|----------------|----------------|-------------------------------------|
+| 0x00           | S              | Chunk group 0                       |
+| S              | S              | Chunk group 1                       |
+...
+| S * (C - 1)    | S              | Chunk group C-1                     |
+
+## Chunk group
+
+A chunk group consists of
+- N data chunk numbers
+- 1 bitmap chunk number
 
 | Offset (hex) | Length (bytes) | Description                         |
 |--------------|----------------|-------------------------------------|
-| 0x00         | 8              | Chunk number containing data        |
-... (4 * sector_size times)
-| 4 x secsz    | 8              | Chunk number containing bitmap      |
-| 4 x secsz + 1 | 8              | Chunk number containing data        |
-... (4 * sector_size times)
-| 8 x secsz + 1  | 8              | Chunk number containing bitmap      |
-......
+| 0x00         | 8              | Data chunk 0                        |
+| 0x08         | 8              | Data chunk 1                        |
+...
+| 8 * (N - 1)  | 8              | Data chunk N-1                      |
+| 8 * N        | 8              | Bitmap chunk                        |
+
+First 9 MSB of chunk number are flags. Todo: describe.
 
 ## Creating test images
 
