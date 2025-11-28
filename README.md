@@ -48,7 +48,8 @@ To determine table, divide offset by D and lookup in directory.
 
 ## Table
 
-A Table consists of chunk groups.
+A Table consists of chunk groups. To determine the chunk group, divide relative
+offset by N * chunk size.
 
 | Offset (hex)   | Length (bytes) | Description                         |
 |----------------|----------------|-------------------------------------|
@@ -72,6 +73,14 @@ A chunk group consists of
 | 8 * N        | 8              | Bitmap chunk                        |
 
 First 9 MSB of chunk number are flags. Todo: describe.
+
+## Bitmap chunk
+
+TODO
+
+## Metadata chunk
+
+TODO
 
 ## Creating test images
 
