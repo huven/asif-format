@@ -54,7 +54,7 @@ To locate a table for a given logical offset, divide the offset by D (the data r
 |--------------|----------------|--------------------------------------|
 | 0x00         | 8              | Sequence number                      |
 | 0x08         | 8              | Chunk number that contains Table 0   |
-| 0x16         | 8              | Chunk number that contains Table 1   |
+| 0x10         | 8              | Chunk number that contains Table 1   |
 ...
 | 8 * T        | 8              | Chunk number that contains Table T-1 |
 
