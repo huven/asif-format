@@ -26,7 +26,7 @@ Integers are stored in big‑endian order.
 | 0x40         | 4              | Chunk size (bytes)                  |
 | 0x44         | 2              | Sector/block size (bytes)           |
 | 0x46         | 2              | ??                                  |
-| 0x48         | 8              | Metadata chunk number               |
+| 0x48         | 8              | Metadata offset (unit: chunk size)  |
 
 ### Definitions
 
@@ -89,9 +89,23 @@ TODO: describe flags.
 
 TODO
 
-## Metadata Chunk
+## Metadata
 
-TODO
+An ASIF image contains metadata consisting of a header and plist (XML). To read the metadata, use offset
+
+> metadata offset * chunk size
+
+Note that this will read past the current sector count, but inside the maximum sector count (typically the theoretically last chunk of the image).
+
+### Metadata header
+
+| Offset (hex) | Length (bytes) | Description                         |
+|--------------|----------------|-------------------------------------|
+| 0x00         | 4              | Magic 'meta' (6d 65 74 61)          |
+| 0x04         | 4              | Version (ex.: 00 00 00 01)          |
+| 0x08         | 4              | Header size (ex.: 00 00 02 00)      |
+| 0x0C         | 4              | Flags                               |
+| 0x10         | 4              | Offset to metadata plist (bytes)    |
 
 ## Creating Test Images
 
