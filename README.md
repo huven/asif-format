@@ -26,7 +26,7 @@ Integers are stored in big‑endian order.
 | 0x40         | 4              | Chunk size (bytes)                  |
 | 0x44         | 2              | Sector/block size (bytes)           |
 | 0x46         | 2              | ??                                  |
-| 0x48         | 8              | Metadata offset? (which unit?)      |
+| 0x48         | 8              | Metadata chunk number               |
 
 ### Definitions
 
