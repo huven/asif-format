@@ -207,3 +207,7 @@ hdiutil eject /dev/disk27
 - Python implementation by Fox-IT:
     - [asif.py](https://github.com/fox-it/dissect.hypervisor/blob/main/dissect/hypervisor/disk/asif.py)
     - [c_asif.py](https://github.com/fox-it/dissect.hypervisor/blob/main/dissect/hypervisor/disk/c_asif.py)
+
+## Contributing
+
+If you spot omissions or errors, or have additional findings to share, please open an issue or submit a pull request.
