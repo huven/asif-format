@@ -8,6 +8,8 @@ This repository collects reverse-engineered technical details and community-cont
 
 ASIF is a two‑level indirect block scheme.
 
+This file documents ASIF with header version 1.
+
 ## Header
 
 Integers are stored in big‑endian order.
