@@ -83,7 +83,17 @@ To determine the data chunk number, divide the relative offset by chunk size.
 | 8 * (N - 1)  | 8              | Data chunk N-1                      |
 | 8 * N        | 8              | Bitmap chunk                        |
 
-TODO: describe flags.
+### Chunk Entry Flags
+
+The high 9 bits of each 64-bit chunk entry are flags; the low 55 bits are the physical chunk index.
+
+| Bit(s) | Mask                 | Label    | Notes                                                                 |
+|--------|----------------------|----------|-----------------------------------------------------------------------|
+| 63     | 0x8000000000000000   | Flag A   | Observed set on allocated data entries after clean unmount.           |
+| 62     | 0x4000000000000000   | Flag B   | Observed set on allocated data entries after clean unmount.           |
+| 61-55  | 0x3F80000000000000   | Reserved | Keep zero until their meaning is known.                               |
+
+Observed behavior on macOS: when a chunk is allocated (data written), both high bits are set on the corresponding data entry and remain set after a clean eject. Bitmap entries appear unflagged. Treat these as allocation/state bits until more is known.
 
 ## Bitmap Chunk
 
