@@ -132,7 +132,7 @@ Sectors marked 00 should be treated as sparse (returning all zeros on read).
 
 ## Metadata
 
-An ASIF image contains metadata consisting of a header and plist (XML). To read the metadata, use offset
+An ASIF image contains metadata consisting of a header and property list (XML). To read the metadata, use offset
 
 > metadata offset * chunk size
 
@@ -146,11 +146,36 @@ Note that this will read past the current sector count, but inside the maximum s
 | 0x04         | 4              | Version (ex.: 00 00 00 01)          |
 | 0x08         | 4              | Header size (ex.: 00 00 02 00)      |
 | 0x0C         | 4              | Flags                               |
-| 0x10         | 4              | Offset to metadata plist (bytes)    |
+| 0x10         | 4              | Offset to metadata property list (bytes)    |
 
-### Metadata plist
+### Metadata property list
 
-TODO describe the keys/values present in the metadata plist
+The [property list](https://en.wikipedia.org/wiki/Property_list) is an XML dictionary. In observed images it contains:
+
+| Key               | Type  | Notes                                              |
+|-------------------|-------|----------------------------------------------------|
+| internal metadata | dict  | Contains a `stable uuid` string.                   |
+| user metadata     | dict  | Present but empty in observed images.              |
+
+`stable uuid` is a UUID string (unique per image).
+
+Example:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>internal metadata</key>
+	<dict>
+		<key>stable uuid</key>
+		<string>dc5c7a3b-1915-43c2-944d-46c6c304b3b7</string>
+	</dict>
+	<key>user metadata</key>
+	<dict/>
+</dict>
+</plist>
+```
 
 ## Creating Test Images
 
