@@ -107,19 +107,27 @@ From the definitions above:
 
 This matches the bitmap chunk size exactly.
 
-Observed behavior from macOS-created images:
+Observed behavior in sample images:
 
 - Writes cause bytes in the bitmap to flip from `0x00` to `0x55` (bit pattern `01` repeated).
-- The byte offset matches `sector index / 4` within the chunk-group (4 sectors per byte).
+- A write at sector 2048 flipped the bitmap byte at offset `0x200` (since `2048 / 4 = 0x200`). Sector 2047 mapped to `0x1ff`.
 
 Byte layout (one byte = 4 sectors):
 
 ```
 bit:  7 6  5 4  3 2  1 0
-      [s0] [s1] [s2] [s3]
+      [s3] [s2] [s1] [s0]
 ```
 
-Each byte packs four 2-bit tuples for four consecutive sectors. The ordering within the byte is shown as MSB-first (not yet confirmed).
+Each byte packs four 2-bit tuples for four consecutive sectors. The ordering is LSB-first: sector 0 uses bits 1:0, sector 1 uses bits 3:2, sector 2 uses bits 5:4, and sector 3 uses bits 7:6. The metadata bitmap byte `0x05` at offset `0xFFE00` implies the first two sectors in that 4-sector group are set, which matches the 0x200-byte metadata header plus plist data.
+
+Addressing formula:
+
+```
+byte offset = floor(sector index / 4)
+bit pair = (sector index % 4) * 2
+state = (bitmap byte >> bit pair) & 0x3
+```
 
 | Bits | Label   | Notes                                             |
 |------|---------|---------------------------------------------------|
