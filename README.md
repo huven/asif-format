@@ -97,7 +97,38 @@ Observed behavior on macOS: when a chunk is allocated (data written), both high 
 
 ## Bitmap Chunk
 
-TODO
+The bitmap chunk is likely a 2-bits-per-sector map for the entire chunk-group.
+
+From the definitions above:
+
+- Chunk-group data size = `N * chunk size`
+- Sectors per chunk-group = `(N * chunk size) / sector size` = `4 * chunk size`
+- At 2 bits per sector, bitmap size = `(4 * chunk size * 2) / 8` = `chunk size`
+
+This matches the bitmap chunk size exactly.
+
+Observed behavior from macOS-created images:
+
+- Writes cause bytes in the bitmap to flip from `0x00` to `0x55` (bit pattern `01` repeated).
+- The byte offset matches `sector index / 4` within the chunk-group (4 sectors per byte).
+
+Byte layout (one byte = 4 sectors):
+
+```
+bit:  7 6  5 4  3 2  1 0
+      [s0] [s1] [s2] [s3]
+```
+
+Each byte packs four 2-bit tuples for four consecutive sectors. The ordering within the byte is shown as MSB-first (not yet confirmed).
+
+| Bits | Label   | Notes                                             |
+|------|---------|---------------------------------------------------|
+| 00   | State 0 | Observed in untouched sectors.                    |
+| 01   | State 1 | Observed where sectors have data written.         |
+| 10   | State 2 | Not observed yet.                                 |
+| 11   | State 3 | Not observed yet.                                 |
+
+Sectors marked 00 should be treated as sparse (returning all zeros on read).
 
 ## Metadata
 
@@ -116,6 +147,10 @@ Note that this will read past the current sector count, but inside the maximum s
 | 0x08         | 4              | Header size (ex.: 00 00 02 00)      |
 | 0x0C         | 4              | Flags                               |
 | 0x10         | 4              | Offset to metadata plist (bytes)    |
+
+### Metadata plist
+
+TODO describe the keys/values present in the metadata plist
 
 ## Creating Test Images
 
