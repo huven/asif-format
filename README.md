@@ -146,7 +146,7 @@ An ASIF image contains metadata consisting of a header and property list (XML). 
 
 > metadata offset * chunk size
 
-Note that this will read past the current sector count, but inside the maximum sector count (typically the theoretically last chunk of the image).
+This offset is a logical address and must be resolved through the directory/table mapping. In observed images, the metadata offset points into the last directory entry (T-1), which references a small table in chunk 1. That table entry then points to the metadata chunk (for example, chunk 2 at byte offset `0x00200000`). Note that this logical address can be past the current sector count, but still within the maximum sector count (typically the theoretically last chunk of the image).
 
 ### Metadata header
 
