@@ -155,8 +155,9 @@ This offset is a logical address and must be resolved through the directory/tabl
 | 0x00         | 4              | Magic 'meta' (6d 65 74 61)          |
 | 0x04         | 4              | Version (ex.: 00 00 00 01)          |
 | 0x08         | 4              | Header size (ex.: 00 00 02 00)      |
-| 0x0C         | 4              | Flags                               |
-| 0x10         | 4              | Offset to metadata property list (bytes)    |
+| 0x0C         | 8              | Offset to metadata property list (bytes)    |
+
+Note: The offset is [not 8-byte aligned](https://github.com/fox-it/dissect.hypervisor/issues/73).
 
 ### Metadata property list
 
