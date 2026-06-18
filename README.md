@@ -52,6 +52,8 @@ The header references two directories. The directory with the highest sequence n
 
 To locate a table for a given logical offset, divide the offset by D (the data range covered by a single table). The integer quotient yields the index into the directory; the corresponding entry provides the chunk number that holds the desired table.
 
+A directory entry value of `0` indicates that no table is present; readers should treat the entire data range covered by the table as sparse zeroes. Do not interpret directory entry `0` as a chunk number (chunk `0` contains the header and directories).
+
 | Offset (hex) | Length (bytes) | Description                          |
 |--------------|----------------|--------------------------------------|
 | 0x00         | 8              | Sequence number                      |
