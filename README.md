@@ -87,15 +87,24 @@ To determine the data chunk number, divide the relative offset by chunk size.
 
 ### Chunk Entry Flags
 
-The high 9 bits of each 64-bit chunk entry are flags; the low 55 bits are the physical chunk index.
+The high 9 bits of each 64-bit chunk entry are flags; the low 55 bits are the physical chunk index. The value of bits 63-62 has observed meaning for data chunks.
 
-| Bit(s) | Mask                 | Label    | Notes                                                                 |
-|--------|----------------------|----------|-----------------------------------------------------------------------|
-| 63     | 0x8000000000000000   | Flag A   | Observed set on allocated data entries after clean unmount.           |
-| 62     | 0x4000000000000000   | Flag B   | Observed set on allocated data entries after clean unmount.           |
-| 61-55  | 0x3F80000000000000   | Reserved | Keep zero until their meaning is known.                               |
+| Bit(s) | Mask                 | Label             |
+|--------|----------------------|-------------------|
+| 63-62  | 0xC000000000000000   | Data chunk status |
+| 61-55  | 0x3F80000000000000   | Reserved          |
 
-Observed behavior on macOS: when a chunk is allocated (data written), both high bits are set on the corresponding data entry and remain set after a clean eject. Bitmap entries appear unflagged. Treat these as allocation/state bits until more is known.
+```
+Data chunk status = entry >> 62
+Physical chunk index = entry & 0x007FFFFFFFFFFFFF
+```
+
+### Observed behavior
+
+- Completely uninitialized data chunks have `Data chunk status` = `00` and physical chunk index = `0`.
+- Partially initialized data chunks have `Data chunk status` = `11`; the corresponding sector states are stored in the bitmap chunk.
+- Completely initialized data chunks have `Data chunk status` = `01`; the corresponding bitmap range is not used for sector validity.
+- Bitmap chunk entries are not data chunk entries; they have been observed with high bits clear while still pointing to an allocated bitmap chunk.
 
 ## Bitmap Chunk
 
@@ -111,8 +120,8 @@ This matches the bitmap chunk size exactly.
 
 Observed behavior in sample images:
 
-- Writes cause bytes in the bitmap to flip from `0x00` to `0x55` (bit pattern `01` repeated).
-- A write at sector 2048 flipped the bitmap byte at offset `0x200` (since `2048 / 4 = 0x200`). Sector 2047 mapped to `0x1ff`.
+- Writes set the corresponding 2-bit sector state to `01`; a bitmap byte becomes `0x55` when all four packed sector states are `01`.
+- A write at sector 2048 changed the bitmap byte at offset `0x200` (since `2048 / 4 = 0x200`). Sector 2047 mapped to `0x1ff`.
 
 Byte layout (one byte = 4 sectors):
 
@@ -138,7 +147,34 @@ state = (bitmap byte >> bit pair) & 0x3
 | 10   | State 2 | Not observed yet.                                 |
 | 11   | State 3 | Not observed yet.                                 |
 
-Sectors marked 00 should be treated as sparse (returning all zeros on read).
+Sectors marked 00 should be treated as sparse (returning all zeros on read). Bitmap states 10 and 11 should be treated as unsupported until characterized.
+
+## Implementation notes
+
+Some states are unknown / not yet observed:
+
+- `Data chunk status` = `00` with physical chunk index > `0`
+- `Data chunk status` = `10`
+- `Data chunk status` = `11` with unsupported bitmap state
+
+Until these states have been characterized, readers should treat them as unsupported rather than returning guessed data.
+
+### Readers
+
+Suggested read behavior for known states:
+
+- `Data chunk status` = `00` and physical chunk index = `0`: return all zeros for sectors in the data chunk
+- `Data chunk status` = `11`: consult the corresponding sector status in the bitmap chunk; return all zeros for uninitialized sectors (`00`), read physical chunk for initialized sectors (`01`).
+- `Data chunk status` = `01`: read physical chunk
+
+### Writers
+
+Suggested data chunk state after completing a write operation:
+
+- If some, but not all, sectors in the data chunk are initialized: set `Data chunk status` = `11`, set the physical chunk index to the data chunk, and update the corresponding sector status in the bitmap chunk.
+- If all sectors in the data chunk are initialized: set `Data chunk status` = `01` and set the physical chunk index to the data chunk. The corresponding bitmap range does not need to be updated for sector validity.
+
+Writers should preserve bits 61-55 (Reserved) when updating existing entries and set them to zero when creating new entries.
 
 ## Metadata
 
