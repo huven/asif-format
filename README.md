@@ -106,6 +106,7 @@ Physical chunk index = entry & 0x007FFFFFFFFFFFFF
 - Completely uninitialized data chunks have `Data chunk status` = `00` and physical chunk index = `0`.
 - Partially initialized data chunks have `Data chunk status` = `11`; the corresponding sector states are stored in the bitmap chunk.
 - Completely initialized data chunks have `Data chunk status` = `01`; the corresponding bitmap range is not used for sector validity.
+- Unmapped data chunks have `Data chunk status` = `10` and physical chunk index = `0`; this was observed after `DKIOCUNMAP` and reads as sparse zeroes.
 - Bitmap chunk entries are not data chunk entries; they have been observed with high bits clear while still pointing to an allocated bitmap chunk.
 
 ## Bitmap Chunk
@@ -156,7 +157,7 @@ Sectors marked 00 should be treated as sparse (returning all zeros on read). Bit
 Some states are unknown / not yet observed:
 
 - `Data chunk status` = `00` with physical chunk index > `0`
-- `Data chunk status` = `10`
+- `Data chunk status` = `10` with physical chunk index > `0`
 - `Data chunk status` = `11` with unsupported bitmap state
 
 Until these states have been characterized, readers should treat them as unsupported rather than returning guessed data.
@@ -166,6 +167,7 @@ Until these states have been characterized, readers should treat them as unsuppo
 Suggested read behavior for known states:
 
 - `Data chunk status` = `00` and physical chunk index = `0`: return all zeros for sectors in the data chunk
+- `Data chunk status` = `10` and physical chunk index = `0`: return all zeros for sectors in the data chunk
 - `Data chunk status` = `11`: consult the corresponding sector status in the bitmap chunk; return all zeros for uninitialized sectors (`00`), read physical chunk for initialized sectors (`01`).
 - `Data chunk status` = `01`: read physical chunk
 
@@ -175,6 +177,7 @@ Suggested data chunk state after completing a write operation:
 
 - If some, but not all, sectors in the data chunk are initialized: set `Data chunk status` = `11`, set the physical chunk index to the data chunk, and update the corresponding sector status in the bitmap chunk.
 - If all sectors in the data chunk are initialized: set `Data chunk status` = `01` and set the physical chunk index to the data chunk. The corresponding bitmap range does not need to be updated for sector validity.
+- If the data chunk is unmapped/discarded: set `Data chunk status` = `10` and physical chunk index = `0`. Previously referenced physical data may remain present in the file but unreferenced.
 
 Writers should preserve bits 61-55 (Reserved) when updating existing entries and set them to zero when creating new entries.
 
