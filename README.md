@@ -27,7 +27,7 @@ Integers are stored in big‑endian order.
 | 0x38         | 8              | Maximum sector count                |
 | 0x40         | 4              | Chunk size (bytes)                  |
 | 0x44         | 2              | Sector/block size (bytes)           |
-| 0x46         | 2              | ??                                  |
+| 0x46         | 2              | `00 00`; Apple’s ASIF parser labels this field `total_segments_t` and rejects non-zero values                                 |
 | 0x48         | 8              | Metadata offset (unit: chunk size)  |
 
 ### Definitions
