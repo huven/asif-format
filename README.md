@@ -25,8 +25,8 @@ Integers are stored in big‑endian order.
 | 0x20         | 16             | UUID                                |
 | 0x30         | 8              | Sector count                        |
 | 0x38         | 8              | Maximum sector count                |
-| 0x40         | 4              | Chunk size (bytes)                  |
-| 0x44         | 2              | Sector/block size (bytes)           |
+| 0x40         | 4              | Chunk size (bytes); must be a non-zero multiple of block size                  |
+| 0x44         | 2              | Block size (bytes); must be a non-zero multiple of 512           |
 | 0x46         | 2              | `00 00`; Apple’s ASIF parser labels this field `total_segments_t` and rejects non-zero values                                 |
 | 0x48         | 8              | Metadata offset (unit: chunk size)  |
 
@@ -39,11 +39,11 @@ Let D be the total amount of data addressed by one table.
 Let T be the maximum number of tables required for the image.
 
 ```
-N = 4 * sector size  
+N = 4 * block size
 S = 8 * (N + 1)  
 C = floor(chunk size / S)  
 D = C * N * chunk size  
-T = ceil(max sector count * sector size / D)
+T = ceil(max sector count * block size / D)
 ```
 
 ## Directory
@@ -116,7 +116,7 @@ The bitmap chunk is likely a 2-bits-per-sector map for the entire chunk-group.
 From the definitions above:
 
 - Chunk-group data size = `N * chunk size`
-- Sectors per chunk-group = `(N * chunk size) / sector size` = `4 * chunk size`
+- Sectors per chunk-group = `(N * chunk size) / block size` = `4 * chunk size`
 - At 2 bits per sector, bitmap size = `(4 * chunk size * 2) / 8` = `chunk size`
 
 This matches the bitmap chunk size exactly.
