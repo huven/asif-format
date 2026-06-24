@@ -123,7 +123,8 @@ This matches the bitmap chunk size exactly.
 
 Observed behavior in sample images:
 
-- Writes set the corresponding 2-bit sector state to `01`; a bitmap byte becomes `0x55` when all four packed sector states are `01`.
+- A chunk-group containing no partially initialized (`Data chunk status` = `11`) data chunks does not need an allocated bitmap chunk; after writing one complete data chunk to an otherwise empty image, the bitmap chunk entry remained `0`.
+- Writes to bitmap-backed chunks set the corresponding 2-bit sector state to `01`; a bitmap byte becomes `0x55` when all four packed sector states are `01`.
 - A write at sector 2048 changed the bitmap byte at offset `0x200` (since `2048 / 4 = 0x200`). Sector 2047 mapped to `0x1ff`.
 
 Byte layout (one byte = 4 sectors):
